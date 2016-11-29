@@ -7,7 +7,8 @@
     <string name="prompt_password">Password (min 4 chars)</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_register">Register</string>
-    <string name="action_record">Record</string>
+    <string name="action_record">Record New Video</string>
+    <string name="action_display">See All Videos</string>
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>

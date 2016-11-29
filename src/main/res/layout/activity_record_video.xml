@@ -3,6 +3,7 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -13,4 +14,22 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         />
+
+    <Button
+        android:id="@+id/goto_record_button"
+        style="?android:textAppearanceSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/action_record"
+        android:textStyle="bold" />
+    <Button
+        android:id="@+id/goto_display_button"
+        style="?android:textAppearanceSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/action_display"
+        android:textStyle="bold" />
+
 </LinearLayout>
