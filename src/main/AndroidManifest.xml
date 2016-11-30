@@ -9,12 +9,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <!--uses-permission android:name="android.permission.CAMERA" /-->
+    <uses-permission android:name="android.permission.CAMERA" />
 
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="true"/>
-
+    <uses-feature android:name="android.hardware.camera"
+        android:required="true" />
 
     <application
         android:name=".AlienAlbum"
@@ -34,9 +32,13 @@
         </activity>
         <activity android:name=".DisplayVideos" />
         <activity android:name=".RegisterPage" />
+<<<<<<< HEAD
         <activity android:name=".PlayVideo" />
         <activity android:name=".RecordVideo" />
         <activity android:name=".Search" />
+=======
+        <activity android:name=".RecordVideo"></activity>
+>>>>>>> 91d1d08cd329715d538b1f8b5e80fabfa29cc3d3
         <!--
  ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -45,7 +47,6 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
-        <activity android:name=".RecordVideo"></activity>
     </application>
 
 </manifest>

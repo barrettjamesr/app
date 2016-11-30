@@ -2,6 +2,7 @@ package com.smartphoneappdev.wcd.alienalbum;
 
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -21,6 +22,8 @@ import java.util.Date;
 import java.util.Locale;
 
 import android.os.Environment;
+import android.view.View;
+import android.widget.Button;
 import android.widget.MediaController;
 import android.widget.VideoView;
 
@@ -35,13 +38,26 @@ public class RecordVideo extends Activity {
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (savedInstanceState != null) {
-            viduri = Uri.parse(savedInstanceState.getString("media_uri"));
-        }
         setContentView(R.layout.activity_record_video);
 
         Log.d(TAG, "************************************** enter create...");
         mVideoView = (VideoView) findViewById(R.id.video_image);
+        Button btnRecordPage = (Button) findViewById(R.id.goto_record_button);
+        btnRecordPage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(RecordVideo.this, RecordVideo.class);
+                RecordVideo.this.startActivity(intent);
+            }
+        });
+        Button btnDisplayVideos = (Button) findViewById(R.id.goto_display_button);
+        btnRecordPage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(RecordVideo.this, DisplayVideos.class);
+                RecordVideo.this.startActivity(intent);
+            }
+        });
 
         ArrayList<String> permissions = new ArrayList<>();
 
@@ -76,13 +92,13 @@ public class RecordVideo extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
 
-            Uri videoUri = data.getData();
+            //Uri videoUri = data.getData();
 
             MediaController mediaController= new MediaController(this);
             mediaController.setAnchorView(mVideoView);
 
             mVideoView.setMediaController(mediaController);
-            mVideoView.setVideoURI(videoUri);
+            mVideoView.setVideoURI(viduri);
             mVideoView.requestFocus();
 
             mVideoView.start();
@@ -142,9 +158,15 @@ public class RecordVideo extends Activity {
             String path = mediaStorageDir.getPath() + File.separator;
             mediaFile = new File(path + ((AlienAlbum) getApplicationContext()).strUserName + timestamp + ".mp4");
 
+            String fileName = System.currentTimeMillis()+".jpg";
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.TITLE, fileName);
+            Uri fileUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
             Log.d(TAG, "File: " + Uri.fromFile(mediaFile));
             //5. Return the file's URI
             return Uri.fromFile(mediaFile);
+            //return fileUri;
         } else {
             return null;
         }
@@ -152,16 +174,8 @@ public class RecordVideo extends Activity {
 
     private boolean isExternalStorageAvailable() {
         String state = Environment.getExternalStorageState();
-
         return state.equals(Environment.MEDIA_MOUNTED);
     }
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        // Save the user's current state
-        savedInstanceState.putString("media_uri", viduri.toString());
-
-        // Always call the superclass so it can save the view hierarchy state
-        super.onSaveInstanceState(savedInstanceState);
-    }
 }
+
 

@@ -8,7 +8,11 @@
     <string name="action_sign_in">Sign in</string>
     <string name="action_register">Register</string>
     <string name="action_record">Record New Video</string>
+<<<<<<< HEAD
     <string name="action_search">Record</string>
+=======
+    <string name="action_display">See All Videos</string>
+>>>>>>> 91d1d08cd329715d538b1f8b5e80fabfa29cc3d3
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
