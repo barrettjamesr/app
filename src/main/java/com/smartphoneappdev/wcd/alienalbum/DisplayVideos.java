@@ -24,5 +24,14 @@ public class DisplayVideos extends AppCompatActivity {
             }
         });
 
+        Button btnSearchPage = (Button) findViewById(R.id.goto_search_button);
+        btnSearchPage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(DisplayVideos.this, Search.class);
+                DisplayVideos.this.startActivity(intent);
+
+            }
+        });
     }
 }
