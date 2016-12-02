@@ -154,10 +154,8 @@ public class RecordVideo extends Activity {
 
     private void StartVideoCapture() {
         viduri = getOutputMediaFileUri();
-        Intent intentParent = getIntent();
 
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        //intent.setType("video/mp4");
         intent.putExtra(MediaStore.EXTRA_OUTPUT, viduri);
         intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
         intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
@@ -197,7 +195,7 @@ public class RecordVideo extends Activity {
             fileName = ((AlienAlbum) getApplicationContext()).strUserName + System.currentTimeMillis()+".mp4";
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.TITLE, fileName);
-            Uri fileUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            //Uri fileUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
 
             Log.d(TAG, "File: " + Uri.fromFile(mediaFile));
             //5. Return the file's URI
@@ -216,10 +214,6 @@ public class RecordVideo extends Activity {
     //modified code used with permission from http://www.coderefer.com/android-upload-file-to-server/
     public int uploadFile(final String selectedFilePath){
 
-        //String filePath = Environment.getExternalStorageDirectory().toString() + "/";
-
-        //File f = new File(filePath,filename);
-
         int serverResponseCode = 0;
 
         HttpURLConnection connection;
@@ -228,10 +222,9 @@ public class RecordVideo extends Activity {
         String twoHyphens = "--";
         String boundary = "*****";
 
-
         int bytesRead,bytesAvailable,bufferSize;
         byte[] buffer;
-        int maxBufferSize = 1 * 1024 * 1024;
+        int maxBufferSize = 1024 * 1024;
         File selectedFile = new File(filePath);
 
         String[] parts = selectedFilePath.split("/");
@@ -252,10 +245,6 @@ public class RecordVideo extends Activity {
             return 0;
         }else{
             try{
-                String urlParameters =
-                        "fName=" + URLEncoder.encode("???", "UTF-8") +
-                                "&lName=" + URLEncoder.encode("???", "UTF-8");
-
                 FileInputStream fileInputStream = new FileInputStream(selectedFile);
                 URL url = new URL(getString(R.string.server_dir) + "upload_video.php");
                 connection = (HttpURLConnection) url.openConnection();
@@ -266,19 +255,16 @@ public class RecordVideo extends Activity {
                 connection.setRequestProperty("Connection", "Keep-Alive");
                 connection.setRequestProperty("ENCTYPE", "multipart/form-data");
                 connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
-                //connection.setRequestProperty("uploaded_file",selectedFilePath);
-
-                Log.i(TAG, "filename: " + fileName);
-                Log.i(TAG, "filepath: " + selectedFilePath);
+                connection.setRequestProperty("uploaded_file",selectedFilePath);
 
                 //creating new dataoutputstream
                 dataOutputStream = new DataOutputStream(connection.getOutputStream());
 
                 //writing bytes to data outputstream
-                //dataOutputStream.writeBytes(twoHyphens + boundary + lineEnd);
-                //dataOutputStream.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\"" + selectedFilePath + "\"" + lineEnd);
-                //dataOutputStream.writeBytes(lineEnd);
-                dataOutputStream.writeBytes (urlParameters);
+                dataOutputStream.writeBytes(twoHyphens + boundary + lineEnd);
+                dataOutputStream.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\"" + selectedFilePath + "\"" + lineEnd);
+                dataOutputStream.writeBytes(lineEnd);
+                //dataOutputStream.writeBytes (urlParameters);
 
                 //returns no. of bytes present in fileInputStream
                 bytesAvailable = fileInputStream.available();
@@ -286,32 +272,22 @@ public class RecordVideo extends Activity {
                 bufferSize = Math.min(bytesAvailable,maxBufferSize);
                 //setting the buffer as byte array of size of bufferSize
                 buffer = new byte[bufferSize];
-/*
+
                 //reads bytes from FileInputStream(from 0th index of buffer to buffersize)
                 bytesRead = fileInputStream.read(buffer,0,bufferSize);
 
-                //loop repeats till bytesRead = -1, i.e., no bytes are left to read
+                //loop repeats till bytesRead = 0, i.e., no bytes are left to read
                 while (bytesRead > 0){
                     //write the bytes read from inputstream
-                    //dataOutputStream.write(buffer,0,bufferSize);
+                    dataOutputStream.write(buffer,0,bufferSize);
+                    Log.i(TAG, "buffer: " + buffer.toString());
                     bytesAvailable = fileInputStream.available();
                     bufferSize = Math.min(bytesAvailable,maxBufferSize);
                     bytesRead = fileInputStream.read(buffer,0,bufferSize);
                 }
-*/
-                //Get Response
-                InputStream is = connection.getInputStream();
-                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-                String line;
-                StringBuffer response = new StringBuffer();
-                while((line = rd.readLine()) != null) {
-                    response.append(line);
-                    response.append('\r');
-                }
-                rd.close();
 
-                //dataOutputStream.writeBytes(lineEnd);
-                //dataOutputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+                dataOutputStream.writeBytes(lineEnd);
+                dataOutputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
 
                 serverResponseCode = connection.getResponseCode();
                 String serverResponseMessage = connection.getResponseMessage();
@@ -319,22 +295,27 @@ public class RecordVideo extends Activity {
                 Log.i(TAG, "Server Response is: " + serverResponseMessage + ": " + serverResponseCode);
 
                 //response code of 200 indicates the server status OK
-                if(serverResponseCode == 200){
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            //tvFileName.setText("File Upload completed.\n\n You can see the uploaded file here: \n\n" + "http://coderefer.com/extras/uploads/"+ fileName);
+                if (serverResponseCode == 200) {
+                    StringBuilder sb = new StringBuilder();
+                    try {
+                        BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                        String line;
+                        while ((line = rd.readLine()) != null) {
+                            sb.append(line);
                         }
-                    });
+                        rd.close();
+                    } catch (IOException ioex) {
+
+                    }
+                    //return sb.toString();
+                }else {
+                    //return "Could not upload";
                 }
 
                 //closing the input and output streams
                 fileInputStream.close();
                 dataOutputStream.flush();
                 dataOutputStream.close();
-
-
 
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -355,7 +336,6 @@ public class RecordVideo extends Activity {
             //dialog.dismiss();
             return serverResponseCode;
         }
-
     }
 
     private class UploadVideoTask extends AsyncTask<Uri, Integer, Long> {
@@ -363,7 +343,6 @@ public class RecordVideo extends Activity {
         protected Long doInBackground(Uri... videoUri) {
             int count = videoUri.length;
             long totalSize = 0;
-            //String selectedFilePath = FilePath.getPath(RecordVideo.this,videoUri[0]);
             Log.i(TAG,"Selected File Path:" + filePath);
 
             uploadFile("" + Uri.fromFile(mediaFile));
