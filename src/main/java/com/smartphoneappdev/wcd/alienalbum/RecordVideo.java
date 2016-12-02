@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.icu.text.AlphabeticIndex;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -67,7 +68,7 @@ public class RecordVideo extends Activity {
             }
         });
         Button btnDisplayVideos = (Button) findViewById(R.id.goto_display_button);
-        btnRecordPage.setOnClickListener(new View.OnClickListener() {
+        btnDisplayVideos.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(RecordVideo.this, DisplayVideos.class);
@@ -108,9 +109,10 @@ public class RecordVideo extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
 
-            // Play video
-            uploadFile();
+            //uploadFile();
+            new UploadVideoTask().execute(viduri);
 
+            // Play video
             MediaController mediaController= new MediaController(this);
             mediaController.setAnchorView(mVideoView);
 
@@ -137,13 +139,13 @@ public class RecordVideo extends Activity {
 
     private void StartVideoCapture() {
         viduri = getOutputMediaFileUri();
+        Intent intentParent = getIntent();
 
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, viduri);
         intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
         intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
         intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, (long) (4 * 1024 * 1024));
-
         startActivityForResult(intent, VIDEO_CAPTURE_REQUEST);
     }
 
@@ -317,6 +319,29 @@ public class RecordVideo extends Activity {
 
     }
 
+    private class UploadVideoTask extends AsyncTask<Uri, Integer, Long> {
+
+        protected Long doInBackground(Uri... videoUri) {
+            int count = videoUri.length;
+            long totalSize = 0;
+            uploadFile();
+            return totalSize;
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+            if(progress[0]%10 == 0) {
+                Toast.makeText(RecordVideo.this, progress[0] + "% uploaded", Toast.LENGTH_SHORT).show();
+            }
+
+            //setProgressPercent(progress[0]);
+        }
+
+        protected void onPostExecute(Long result) {
+            Toast.makeText(RecordVideo.this, "Uploaded", Toast.LENGTH_SHORT).show();
+            //showDialog("Downloaded " + result + " bytes");
+        }
+    }
 }
+
 
 

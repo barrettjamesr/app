@@ -35,7 +35,8 @@
         <activity android:name=".DisplayVideos" />
         <activity android:name=".RegisterPage" />
         <activity android:name=".PlayVideo" />
-        <activity android:name=".RecordVideo" />
+        <activity android:name=".RecordVideo"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
         <activity android:name=".Search" />
         <!--
  ATTENTION: This was auto-generated to add Google Play services to your project for
