@@ -2,34 +2,38 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_height="fill_parent"
+    android:weightSum="100"
+    >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Record Your Video"
-        />
-    <VideoView
-        android:id="@+id/video_image"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Record Your Video"
+            />
 
-    <Button
-        android:id="@+id/goto_record_button"
-        style="?android:textAppearanceSmall"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/action_record"
-        android:textStyle="bold" />
-    <Button
-        android:id="@+id/goto_display_button"
-        style="?android:textAppearanceSmall"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="@string/action_display"
-        android:textStyle="bold" />
+        <VideoView
+            android:id="@+id/video_image"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="70"
+            />
+
+        <Button
+            android:id="@+id/goto_record_button"
+            style="?android:textAppearanceSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/action_record"
+            android:textStyle="bold" />
+        <Button
+            android:id="@+id/goto_display_button"
+            style="?android:textAppearanceSmall"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/action_display"
+            android:textStyle="bold" />
 
 </LinearLayout>

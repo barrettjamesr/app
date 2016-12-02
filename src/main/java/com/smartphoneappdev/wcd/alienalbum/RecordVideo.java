@@ -14,6 +14,7 @@ import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import android.app.Activity;
@@ -110,14 +111,16 @@ public class RecordVideo extends Activity {
         if (requestCode == VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
 
             //uploadFile();
-            new UploadVideoTask().execute(viduri);
+            new UploadVideoTask().execute(data.getData());
+
+            Uri videoUri = data.getData();
 
             // Play video
             MediaController mediaController= new MediaController(this);
             mediaController.setAnchorView(mVideoView);
 
             mVideoView.setMediaController(mediaController);
-            mVideoView.setVideoURI(viduri);
+            mVideoView.setVideoURI(videoUri);
             mVideoView.requestFocus();
 
             mVideoView.start();
@@ -142,6 +145,7 @@ public class RecordVideo extends Activity {
         Intent intentParent = getIntent();
 
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        intent.setType("video/mp4");
         intent.putExtra(MediaStore.EXTRA_OUTPUT, viduri);
         intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
         intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
@@ -185,8 +189,7 @@ public class RecordVideo extends Activity {
 
             Log.d(TAG, "File: " + Uri.fromFile(mediaFile));
             //5. Return the file's URI
-            return Uri.fromFile(mediaFile);
-            //return fileUri;
+            return FileProvider.getUriForFile(RecordVideo.this, BuildConfig.APPLICATION_ID + ".provider", mediaFile);            //return fileUri;
         } else {
             return null;
         }
@@ -199,12 +202,7 @@ public class RecordVideo extends Activity {
 
     //android upload file to server
     //modified code used with permission from http://www.coderefer.com/android-upload-file-to-server/
-    public int uploadFile(){
-
-        //File myFile = new File(viduri.getPath());
-        //final String selectedFilePath = myFile.getAbsolutePath();
-
-        //final String selectedFilePath = getRealPathFromURI(viduri);
+    public int uploadFile(final String selectedFilePath){
 
         int serverResponseCode = 0;
 
@@ -218,17 +216,19 @@ public class RecordVideo extends Activity {
         int bytesRead,bytesAvailable,bufferSize;
         byte[] buffer;
         int maxBufferSize = 1 * 1024 * 1024;
-        File selectedFile = new File(filePath);
+        File selectedFile = new File(selectedFilePath);
 
-        String[] parts = filePath.split("/");
+
+        String[] parts = selectedFilePath.split("/");
         final String fileName = parts[parts.length-1];
 
         if (!selectedFile.isFile()){
+            //dialog.dismiss();
 
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(RecordVideo.this,"File Doesn't exist! WTF?",Toast.LENGTH_SHORT).show();
+                    //tvFileName.setText("Source File Doesn't Exist: " + selectedFilePath);
                 }
             });
             return 0;
@@ -244,7 +244,7 @@ public class RecordVideo extends Activity {
                 connection.setRequestProperty("Connection", "Keep-Alive");
                 connection.setRequestProperty("ENCTYPE", "multipart/form-data");
                 connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
-                connection.setRequestProperty("file",filePath);
+                connection.setRequestProperty("uploaded_file",selectedFilePath);
 
                 //creating new dataoutputstream
                 dataOutputStream = new DataOutputStream(connection.getOutputStream());
@@ -252,7 +252,7 @@ public class RecordVideo extends Activity {
                 //writing bytes to data outputstream
                 dataOutputStream.writeBytes(twoHyphens + boundary + lineEnd);
                 dataOutputStream.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\""
-                        + filePath + "\"" + lineEnd);
+                        + selectedFilePath + "\"" + lineEnd);
 
                 dataOutputStream.writeBytes(lineEnd);
 
@@ -288,7 +288,8 @@ public class RecordVideo extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(RecordVideo.this,"File Uploaded",Toast.LENGTH_SHORT).show();
+
+                            //tvFileName.setText("File Upload completed.\n\n You can see the uploaded file here: \n\n" + "http://coderefer.com/extras/uploads/"+ fileName);
                         }
                     });
                 }
@@ -297,6 +298,8 @@ public class RecordVideo extends Activity {
                 fileInputStream.close();
                 dataOutputStream.flush();
                 dataOutputStream.close();
+
+
 
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -314,6 +317,7 @@ public class RecordVideo extends Activity {
                 e.printStackTrace();
                 Toast.makeText(RecordVideo.this, "Cannot Read/Write File!", Toast.LENGTH_SHORT).show();
             }
+            //dialog.dismiss();
             return serverResponseCode;
         }
 
@@ -324,7 +328,10 @@ public class RecordVideo extends Activity {
         protected Long doInBackground(Uri... videoUri) {
             int count = videoUri.length;
             long totalSize = 0;
-            uploadFile();
+            String selectedFilePath = FilePath.getPath(RecordVideo.this,videoUri[0]);
+            Log.i(TAG,"Selected File Path:" + selectedFilePath);
+
+            uploadFile(selectedFilePath);
             return totalSize;
         }
 
