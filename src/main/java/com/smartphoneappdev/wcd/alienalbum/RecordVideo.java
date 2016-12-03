@@ -4,10 +4,9 @@ package com.smartphoneappdev.wcd.alienalbum;
 import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.icu.text.AlphabeticIndex;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
@@ -22,18 +21,15 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,6 +41,8 @@ import android.widget.Button;
 import android.widget.MediaController;
 import android.widget.Toast;
 import android.widget.VideoView;
+
+import org.json.JSONObject;
 
 public class RecordVideo extends Activity {
 
@@ -116,26 +114,39 @@ public class RecordVideo extends Activity {
         } else {
             StartVideoCapture();
         }
+
+
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
 
-            //uploadFile();
-            new UploadVideoTask().execute(data.getData());
+            if (data.getData() == null){
+                Log.i(TAG, "Data URI is null :( " + filePath);
+            }
+            else{
+                Uri videoUri = data.getData();
 
-            Uri videoUri = data.getData();
+                // Play video
+                MediaController mediaController= new MediaController(this);
+                mediaController.setAnchorView(mVideoView);
 
-            // Play video
-            MediaController mediaController= new MediaController(this);
-            mediaController.setAnchorView(mVideoView);
+                mVideoView.setMediaController(mediaController);
+                mVideoView.setVideoURI(videoUri);
+                mVideoView.requestFocus();
 
-            mVideoView.setMediaController(mediaController);
-            mVideoView.setVideoURI(videoUri);
-            mVideoView.requestFocus();
+                //uploadFile and details;
+                new UploadVideoTask().execute(data.getData());
+                MediaPlayer mp = MediaPlayer.create(this, videoUri);
+                String fileNameWithoutExt = fileName.replaceFirst("[.][^.]+$", "");
+                int duration = mp.getDuration();
+                mp.release();
+                new InsertVideoDetails(this, fileNameWithoutExt, duration).execute();
 
-            mVideoView.start();
+                mVideoView.start();
+            }
+
         }
     }
 
@@ -172,7 +183,7 @@ public class RecordVideo extends Activity {
             // get the Uri
 
             //1. Get the external storage directory
-//            File mediaStorageDir = new File(Environment.getExternalStorageDirectory().getPath());
+            //File mediaStorageDir = new File(Environment.getExternalStorageDirectory().getPath());
             File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), getApplicationContext().getResources().getString(R.string.app_name));
 
             //2. Create our subdirectory
@@ -189,13 +200,12 @@ public class RecordVideo extends Activity {
 
             String path = mediaStorageDir.getPath() + File.separator;
 
-            filePath = path + ((AlienAlbum) getApplicationContext()).strUserName + timestamp + ".mp4";
+            fileName = ((AlienAlbum) getApplicationContext()).strUserName + timestamp + ".mp4";
+            filePath = path + fileName;
             mediaFile = new File(filePath);
 
-            fileName = ((AlienAlbum) getApplicationContext()).strUserName + System.currentTimeMillis()+".mp4";
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.TITLE, fileName);
-            //Uri fileUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
 
             Log.d(TAG, "File: " + Uri.fromFile(mediaFile));
             //5. Return the file's URI
@@ -231,14 +241,11 @@ public class RecordVideo extends Activity {
         final String fileName = parts[parts.length-1];
 
         if (!selectedFile.isFile()){
-            //dialog.dismiss();
 
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     Log.i(TAG, "Source File Doesn't Exist: " + filePath);
-                    Log.i(TAG, "Source File Doesn't Exist: " + selectedFilePath);
-                    Log.i(TAG, "Source File Doesn't Exist: " + fileName);
 
                 }
             });
@@ -333,7 +340,6 @@ public class RecordVideo extends Activity {
                 e.printStackTrace();
                 Toast.makeText(RecordVideo.this, "Cannot Read/Write File!", Toast.LENGTH_SHORT).show();
             }
-            //dialog.dismiss();
             return serverResponseCode;
         }
     }
@@ -354,14 +360,78 @@ public class RecordVideo extends Activity {
                 Toast.makeText(RecordVideo.this, progress[0] + "% uploaded", Toast.LENGTH_SHORT).show();
             }
 
-            //setProgressPercent(progress[0]);
         }
 
         protected void onPostExecute(Long result) {
             Toast.makeText(RecordVideo.this, "Uploaded", Toast.LENGTH_SHORT).show();
-            //showDialog("Downloaded " + result + " bytes");
         }
     }
+
+    public class InsertVideoDetails extends AsyncTask<Void, Void, Boolean> {
+
+        private Context context;
+        private final String vid_file_name;
+        private final long vid_length;
+
+        private String strResult;
+
+        InsertVideoDetails(Context context, String file_name, long length) {
+            this.context = context;
+            vid_file_name = file_name;
+            vid_length = length;
+
+            Log.d(TAG, vid_file_name + " " + vid_length);
+
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            try {
+                String link = getString(R.string.server_dir) + "video_details.php"
+                        + "?file_name=" + Uri.encode(vid_file_name, "UTF-8")
+                        + "&length=" + vid_length
+                        + "&userID=" + ((AlienAlbum) getApplicationContext()).intUserID
+                        + "&user_name=" + Uri.encode(((AlienAlbum) getApplicationContext()).strUserName, "UTF-8");
+
+                Log.d(TAG, link);
+
+                URL url = new URL(link);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setInstanceFollowRedirects(true);
+                conn.setRequestMethod("GET");
+                conn.connect();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        conn.getInputStream(), "UTF-8"));
+                String parsedString = reader.readLine();
+
+                JSONObject obj = new JSONObject(parsedString);
+
+                strResult = obj.getString("Result");
+                Log.d(TAG, strResult);
+
+                return !obj.getBoolean("error");
+
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+
+            if (success) {
+                Log.d(TAG, "written to vid db");
+            } else {
+                Toast.makeText(getApplicationContext(), "error writing to MySQL DB", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+        }
+    }
+
 }
 
 
