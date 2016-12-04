@@ -5,6 +5,7 @@
     <string name="prompt_email">Email</string>
     <string name="prompt_username">User Name</string>
     <string name="prompt_password">Password (min 4 chars)</string>
+    <string name="prompt_record">Record Your Video</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_register">Register</string>
     <string name="action_record">Record New Video</string>

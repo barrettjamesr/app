@@ -2,11 +2,15 @@ package com.smartphoneappdev.wcd.alienalbum;
 
 
 import android.Manifest;
+import android.app.DownloadManager;
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.icu.text.AlphabeticIndex;
 import android.media.MediaPlayer;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
@@ -14,26 +18,35 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.util.Base64;
 import android.util.Log;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Locale;
+import java.util.Map;
 
 import android.os.Environment;
 import android.view.View;
@@ -41,6 +54,11 @@ import android.widget.Button;
 import android.widget.MediaController;
 import android.widget.Toast;
 import android.widget.VideoView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.google.android.gms.appdatasearch.GetRecentContextCall;
 
 import org.json.JSONObject;
 
@@ -54,7 +72,10 @@ public class RecordVideo extends Activity {
     private Uri viduri;
     private String filePath;
     private String fileName;
+    private String encodedBitmap;
     private File mediaFile;
+    private JSONParser jsonParser = new JSONParser();
+
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -122,11 +143,12 @@ public class RecordVideo extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
 
-            if (data.getData() == null){
+            Uri videoUri = data.getData();
+
+            if (videoUri == null){
                 Log.i(TAG, "Data URI is null :( " + filePath);
             }
             else{
-                Uri videoUri = data.getData();
 
                 // Play video
                 MediaController mediaController= new MediaController(this);
@@ -136,12 +158,22 @@ public class RecordVideo extends Activity {
                 mVideoView.setVideoURI(videoUri);
                 mVideoView.requestFocus();
 
-                //uploadFile and details;
-                new UploadVideoTask().execute(data.getData());
+                //upload file, thumbnail, and details;
+                new UploadVideoTask().execute(videoUri);
+
                 MediaPlayer mp = MediaPlayer.create(this, videoUri);
                 String fileNameWithoutExt = fileName.replaceFirst("[.][^.]+$", "");
                 int duration = mp.getDuration();
                 mp.release();
+                Bitmap thumb = (Bitmap) ThumbnailUtils.createVideoThumbnail(filePath,MediaStore.Video.Thumbnails.MINI_KIND);
+                ByteArrayOutputStream bao = new ByteArrayOutputStream();
+                if (thumb.compress(Bitmap.CompressFormat.JPEG, 50, bao)){
+                    byte[] imageArray = bao.toByteArray();
+                    encodedBitmap= Base64.encodeToString(imageArray, Base64.DEFAULT);
+                } else {
+                    encodedBitmap = "";
+                }
+
                 new InsertVideoDetails(this, fileNameWithoutExt, duration).execute();
 
                 mVideoView.start();
@@ -268,10 +300,10 @@ public class RecordVideo extends Activity {
                 dataOutputStream = new DataOutputStream(connection.getOutputStream());
 
                 //writing bytes to data outputstream
+
                 dataOutputStream.writeBytes(twoHyphens + boundary + lineEnd);
                 dataOutputStream.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\"" + selectedFilePath + "\"" + lineEnd);
                 dataOutputStream.writeBytes(lineEnd);
-                //dataOutputStream.writeBytes (urlParameters);
 
                 //returns no. of bytes present in fileInputStream
                 bytesAvailable = fileInputStream.available();
@@ -314,9 +346,7 @@ public class RecordVideo extends Activity {
                     } catch (IOException ioex) {
 
                     }
-                    //return sb.toString();
                 }else {
-                    //return "Could not upload";
                 }
 
                 //closing the input and output streams
@@ -340,6 +370,7 @@ public class RecordVideo extends Activity {
                 e.printStackTrace();
                 Toast.makeText(RecordVideo.this, "Cannot Read/Write File!", Toast.LENGTH_SHORT).show();
             }
+
             return serverResponseCode;
         }
     }
@@ -352,6 +383,18 @@ public class RecordVideo extends Activity {
             Log.i(TAG,"Selected File Path:" + filePath);
 
             uploadFile("" + Uri.fromFile(mediaFile));
+
+            HashMap<String, String> dataTosend = new HashMap<>();
+            dataTosend.put("image", encodedBitmap);
+            dataTosend.put("name", fileName.replaceFirst("[.][^.]+$", ""));
+
+            JSONObject json = jsonParser.makeHttpRequest(RecordVideo.this, "POST", dataTosend);
+
+            if (json != null) {
+                Log.d("JSON result", json.toString());
+
+            }
+
             return totalSize;
         }
 
@@ -374,6 +417,7 @@ public class RecordVideo extends Activity {
         private final long vid_length;
 
         private String strResult;
+        //upload bitmap
 
         InsertVideoDetails(Context context, String file_name, long length) {
             this.context = context;
@@ -432,6 +476,90 @@ public class RecordVideo extends Activity {
         }
     }
 
+    // Used with permission from: http://stackoverflow.com/questions/34085599/upload-image-to-php-server-with-jsonparser
+    public class JSONParser {
+
+        String charset = "UTF-8";
+        HttpURLConnection conn;
+        DataOutputStream wr;
+        StringBuilder result = new StringBuilder();
+        URL urlObj;
+        JSONObject jObj = null;
+        StringBuilder sbParams;
+        String paramsString;
+
+        public JSONObject makeHttpRequest(final Context context,String method,
+                                          HashMap<String, String> params) {
+
+            sbParams = new StringBuilder();
+            int i = 0;
+            for (String key : params.keySet()) {
+                try {
+                    if (i != 0){
+                        sbParams.append("&");
+                    }
+                    sbParams.append(key).append("=")
+                            .append(URLEncoder.encode(params.get(key), charset));
+
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                i++;
+            }
+
+            if (method.equals("POST")) {
+                // request method is POST
+                try {
+                    urlObj = new URL(getString(R.string.server_dir) + "upload_bitmap.php");
+                    conn = (HttpURLConnection) urlObj.openConnection();
+                    conn.setDoOutput(true);
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Accept-Charset", charset);
+                    conn.setReadTimeout(10*1000);//orijinal 10000
+                    conn.setConnectTimeout(15*1000);//orijinal 15000
+                    conn.connect();
+                    paramsString = sbParams.toString();
+                    wr = new DataOutputStream(conn.getOutputStream());
+                    wr.writeBytes(paramsString);
+                    wr.flush();
+                    wr.close();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            try {
+                //Receive the response from the server
+                InputStream in = new BufferedInputStream(conn.getInputStream());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    result.append(line);
+                }
+
+                Log.d("JSON Parser", "result: " + result.toString());
+
+            } catch (IOException e) {
+
+                Log.d("JSON Parser", "Connection Problem");
+                e.printStackTrace();
+            }
+
+            conn.disconnect();
+
+            // try parse the string to a JSON object
+            try {
+                jObj = new JSONObject(result.toString());
+            } catch (JSONException e) {
+                Log.e("JSON Parser", "Error parsing data " + e.toString());
+            }
+
+            // return JSON Object
+            return jObj;
+        }
+    }
 }
 
 

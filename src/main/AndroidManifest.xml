@@ -32,12 +32,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DisplayVideos" />
-        <activity android:name=".RegisterPage" />
-        <activity android:name=".PlayVideo" />
-        <activity android:name=".RecordVideo"
+        <activity android:name=".DisplayVideos" android:label="@string/app_name"/>
+        <activity android:name=".RegisterPage" android:label="@string/app_name" />
+        <activity android:name=".PlayVideo" android:label="@string/app_name" />
+        <activity android:name=".RecordVideo" android:label="@string/app_name"
             android:configChanges="orientation|keyboardHidden|screenSize"/>
-        <activity android:name=".Search" />
+        <activity android:name=".Search" android:label="@string/app_name" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
