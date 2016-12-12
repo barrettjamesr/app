@@ -16,6 +16,13 @@
             android:scaleType="centerCrop"/>
 
         <ImageView
+            android:id="@+id/imageview_play"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/video_play"
+            android:layout_gravity="center"/>
+
+        <ImageView
             android:id="@+id/imageview_favorite"
             android:layout_width="24dp"
             android:layout_height="24dp"
@@ -24,7 +31,7 @@
 
     </FrameLayout>
 
-    <TextView
+    <!--TextView
         android:id="@+id/textview_comment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -34,6 +41,6 @@
         android:paddingTop="4dp"
         android:paddingLeft="8dp"
         android:paddingRight="8dp"
-        android:gravity="center_horizontal"/>
+        android:gravity="center_horizontal"/-->
 
 </LinearLayout>

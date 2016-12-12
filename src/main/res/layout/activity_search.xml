@@ -1,37 +1,164 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_search"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
     tools:context="com.smartphoneappdev.wcd.alienalbum.Search">
 
-    <android.support.design.widget.AppBarLayout
+    <TextView
+        android:id="@+id/lblSearch"
+        android:textStyle="italic"
+        android:text="@string/title_activity_search"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+    android:orientation="horizontal"
+    android:weightSum="2"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:text="@string/Category"
+        android:layout_weight="1"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:id="@+id/lblCategory" />
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
-
-    </android.support.design.widget.AppBarLayout>
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
+    <Spinner
+        android:layout_weight="1"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@android:drawable/ic_dialog_email"
+        android:textAlignment="textEnd"
+        android:entries="@array/categories_array"
+        android:id="@+id/spnCategory"
         />
 
-    <include layout="@layout/content_search" />
+    </LinearLayout>
 
-</android.support.design.widget.CoordinatorLayout>
+    <LinearLayout
+    android:orientation="horizontal"
+    android:weightSum="2"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:layout_weight="1"
+        android:text="@string/Favourite"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/lblFavourite" />
+
+    <Switch
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:textAlignment="textEnd"
+        android:showText="true"
+        android:textOff="@string/AllFavourite"
+        android:textOn="@string/Favourites"
+        style="@style/AlienSwitch"
+        android:switchMinWidth="@dimen/switch_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:id="@+id/swFavourite" />
+
+    </LinearLayout>
+
+    <LinearLayout
+    android:orientation="horizontal"
+    android:weightSum="2"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:text="@string/Privacy"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:id="@+id/lblPrivacy" />
+
+    <Switch
+        android:layout_weight="1"
+        android:textAlignment="textEnd"
+        android:showText="true"
+        android:switchMinWidth="@dimen/switch_width"
+        style="@style/AlienSwitch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textOff="@string/Public"
+        android:textOn="@string/Private"
+        android:layout_gravity="end"
+        android:id="@+id/swPrivacy"
+        />
+
+    </LinearLayout>
+
+    <LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:weightSum="3"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:layout_weight="1"
+        android:text="@string/Tags"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/lblTags"
+        />
+    <android.support.design.widget.TextInputLayout
+        android:layout_weight="2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAlignment="textEnd"
+            android:hint="@string/prompt_tag_search"
+            android:inputType="text"
+            android:maxLines="1"
+            android:text=""
+            android:ems="10"
+            android:id="@+id/editTags"
+            />
+    </android.support.design.widget.TextInputLayout>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+    android:orientation="horizontal"
+    android:weightSum="2"
+    android:paddingTop="20dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <Button
+        android:text="@string/prompt_back"
+        style="@style/AlienButtons"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/btnBack"
+        android:layout_weight="1"
+        />
+
+    <Button
+        android:text="@string/action_search"
+        style="@style/AlienButtons"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/btnSearch"
+        android:layout_weight="1"
+        />
+
+    </LinearLayout>
+
+</LinearLayout>
 

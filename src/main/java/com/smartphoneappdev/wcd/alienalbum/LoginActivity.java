@@ -6,6 +6,9 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 
 import android.net.Uri;
@@ -18,9 +21,11 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -30,15 +35,11 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
-import static android.Manifest.permission.READ_CONTACTS;
 
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity implements ConnectivityReceiver.ConnectivityReceiverListener{
 
     /**
      * Id to identity READ_CONTACTS permission request.
@@ -55,7 +56,6 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -72,9 +72,11 @@ public class LoginActivity extends AppCompatActivity {
         ((AlienAlbum) getApplicationContext()).strUserName = "";
         ((AlienAlbum) getApplicationContext()).blnLoggedIn = false;
 
-        // Set up the login form.
-        mEmailView = (EditText) findViewById(R.id.email);
+        setTitle(getTitle() + ": " + "Login");
 
+        // Set up the login form.
+
+        mEmailView = (EditText) findViewById(R.id.email);
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -91,23 +93,57 @@ public class LoginActivity extends AppCompatActivity {
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                attemptLogin();
+                if (checkConnection()) {
+                    attemptLogin();
+                } else {
+                    Toast.makeText(LoginActivity.this, "Network connection not available", Toast.LENGTH_LONG).show();
+                }
+
             }
         });
+        mEmailSignInButton.requestFocus();
         Button btnRegisterPage = (Button) findViewById(R.id.goto_register_button);
         btnRegisterPage.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(LoginActivity.this, RegisterPage.class);
                 LoginActivity.this.startActivity(intent);
-
             }
         });
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        hideKeyboard(LoginActivity.this);
     }
 
+    public static void hideKeyboard(Activity activity) {
+        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        //Find the currently focused view, so we can grab the correct window token from it.
+        View view = activity.getCurrentFocus();
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if (view == null) {
+            view = new View(activity);
+        }
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    // Method to manually check connection status
+    private boolean checkConnection() {
+        return ConnectivityReceiver.isConnected();
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // register connection status listener
+        AlienAlbum.getInstance().setConnectivityListener(this);
+    }
+    @Override
+    public void onNetworkConnectionChanged(boolean isConnected) {
+
+        Toast.makeText(LoginActivity.this, "Internet Connected: " + isConnected, Toast.LENGTH_SHORT).show();
+    }
     /**
      * Attempts to sign in or register the account specified by the login form.
      * If there are form errors (invalid email, missing fields, etc.), the
@@ -158,6 +194,7 @@ public class LoginActivity extends AppCompatActivity {
             mAuthTask = new UserLoginTask(this, email, password);
             mAuthTask.execute((Void) null);
         }
+
     }
 
     private boolean isEmailValid(String email) {
@@ -224,7 +261,7 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
-                String link = getString(R.string.server_dir) + "validate_login.php"
+                String link = getString(R.string.server_dir) + "validate_login_jrb.php"
                         + "?email=" + Uri.encode(mEmail, "UTF-8")
                         + "&password=" + Uri.encode(mPassword, "UTF-8");
 

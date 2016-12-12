@@ -20,6 +20,7 @@ import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -52,6 +53,7 @@ public class RegisterPage extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_page);
+        setTitle(getTitle() + ": " + "Register");
 
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -59,13 +61,14 @@ public class RegisterPage extends AppCompatActivity {
 
         mPasswordView = (EditText) findViewById(R.id.password);
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_register_button);
-        mEmailSignInButton.setOnClickListener(new View.OnClickListener() {
+        Button mRegisterButton = (Button) findViewById(R.id.email_register_button);
+        mRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 attemptRegister();
             }
         });
+        mRegisterButton.requestFocus();
 
         mRegisterFormView = findViewById(R.id.register_form);
         mProgressView = findViewById(R.id.login_progress);
@@ -92,12 +95,17 @@ public class RegisterPage extends AppCompatActivity {
         View focusView = null;
 
         // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password) && !isUserNameValid(username)) {
+        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
         }
 
+        if (!TextUtils.isEmpty(username) && !isUserNameValid(username)) {
+            mUserNameView.setError(getString(R.string.error_invalid_username));
+            focusView = mUserNameView;
+            cancel = true;
+        }
         // Check for a valid email address.
         if (TextUtils.isEmpty(email)) {
             mEmailView.setError(getString(R.string.error_field_required));
@@ -186,14 +194,14 @@ public class RegisterPage extends AppCompatActivity {
         UserRegisterTask(Context context, String email, String username, String password) {
             this.context = context;
             mEmail = email;
-            mUsername = username;
+            mUsername = username.trim();
             mPassword = password;
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
-                String link = getString(R.string.server_dir) + "register_user.php"
+                String link = getString(R.string.server_dir) + "register_user_jrb.php"
                         + "?email=" + Uri.encode(mEmail, "UTF-8")
                         + "&user_name=" + Uri.encode(mUsername, "UTF-8")
                         + "&password=" + Uri.encode(mPassword, "UTF-8");

@@ -1,27 +1,26 @@
 package com.smartphoneappdev.wcd.alienalbum;
 
-
 import android.Manifest;
-import android.app.DownloadManager;
-import android.app.ProgressDialog;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.icu.text.AlphabeticIndex;
 import android.media.MediaPlayer;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -44,25 +43,23 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Locale;
-import java.util.Map;
 
 import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.MediaController;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.android.gms.appdatasearch.GetRecentContextCall;
+public class RecordVideo extends AppCompatActivity {
 
-import org.json.JSONObject;
-
-public class RecordVideo extends Activity {
+    private View mProgressView;
+    private TextView mUploadingStatus;
 
     private static final String TAG = RecordVideo.class.getSimpleName();
 
@@ -75,11 +72,13 @@ public class RecordVideo extends Activity {
     private String encodedBitmap;
     private File mediaFile;
     private JSONParser jsonParser = new JSONParser();
+    private boolean uploading = false;
 
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record_video);
+        setTitle(getTitle() + ": " + "Record");
 
         Log.d(TAG, "************************************** enter create...");
         mVideoView = (VideoView) findViewById(R.id.video_image);
@@ -91,14 +90,34 @@ public class RecordVideo extends Activity {
                 RecordVideo.this.startActivity(intent);
             }
         });
+        Button btnEditDetails = (Button) findViewById(R.id.goto_edit_button);
+        btnEditDetails.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(uploading){
+                    Toast.makeText(RecordVideo.this, getString(R.string.prompt_wait), Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(RecordVideo.this, EditVideo.class);
+                    intent.putExtra("video_ref", "videos/" + fileName.replaceFirst("[.][^.]+$", ""));
+                    RecordVideo.this.startActivity(intent);
+                }
+            }
+        });
         Button btnDisplayVideos = (Button) findViewById(R.id.goto_display_button);
         btnDisplayVideos.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(RecordVideo.this, DisplayVideos.class);
-                RecordVideo.this.startActivity(intent);
+                if(uploading){
+                    Toast.makeText(RecordVideo.this, getString(R.string.prompt_wait), Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(RecordVideo.this, DisplayVideos.class);
+                    RecordVideo.this.startActivity(intent);
+                }
             }
         });
+        mUploadingStatus = (TextView) findViewById(R.id.uploading_status);
+        mUploadingStatus.setVisibility(View.GONE);
+        mProgressView = findViewById(R.id.login_progress);
 
         ArrayList<String> permissions = new ArrayList<>();
 
@@ -136,16 +155,15 @@ public class RecordVideo extends Activity {
             StartVideoCapture();
         }
 
-
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
 
-            Uri videoUri = data.getData();
+            //Uri videoUri = data.getData();
 
-            if (videoUri == null){
+            if (viduri == null){
                 Log.i(TAG, "Data URI is null :( " + filePath);
             }
             else{
@@ -155,19 +173,23 @@ public class RecordVideo extends Activity {
                 mediaController.setAnchorView(mVideoView);
 
                 mVideoView.setMediaController(mediaController);
-                mVideoView.setVideoURI(videoUri);
+                mVideoView.setVideoURI(viduri);
                 mVideoView.requestFocus();
 
                 //upload file, thumbnail, and details;
-                new UploadVideoTask().execute(videoUri);
+                new UploadVideoTask().execute(viduri);
 
-                MediaPlayer mp = MediaPlayer.create(this, videoUri);
+                MediaPlayer mp = MediaPlayer.create(this, viduri);
                 String fileNameWithoutExt = fileName.replaceFirst("[.][^.]+$", "");
                 int duration = mp.getDuration();
                 mp.release();
-                Bitmap thumb = (Bitmap) ThumbnailUtils.createVideoThumbnail(filePath,MediaStore.Video.Thumbnails.MINI_KIND);
+
+
+                File myFile = new File(viduri.getPath());
+
+                Bitmap thumb = (Bitmap) ThumbnailUtils.createVideoThumbnail(myFile.getAbsolutePath(),MediaStore.Video.Thumbnails.MINI_KIND);
                 ByteArrayOutputStream bao = new ByteArrayOutputStream();
-                if (thumb.compress(Bitmap.CompressFormat.JPEG, 50, bao)){
+                if (thumb.compress(Bitmap.CompressFormat.JPEG, 30, bao)){
                     byte[] imageArray = bao.toByteArray();
                     encodedBitmap= Base64.encodeToString(imageArray, Base64.DEFAULT);
                 } else {
@@ -178,7 +200,6 @@ public class RecordVideo extends Activity {
 
                 mVideoView.start();
             }
-
         }
     }
 
@@ -197,12 +218,13 @@ public class RecordVideo extends Activity {
 
     private void StartVideoCapture() {
         viduri = getOutputMediaFileUri();
+        Log.d(TAG, viduri.getPath());
 
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, viduri);
         intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
-        intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
-        intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, (long) (4 * 1024 * 1024));
+        intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 30);
+        intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, (long) (6 * 1024 * 1024));
         startActivityForResult(intent, VIDEO_CAPTURE_REQUEST);
     }
 
@@ -215,7 +237,10 @@ public class RecordVideo extends Activity {
             // get the Uri
 
             //1. Get the external storage directory
-            //File mediaStorageDir = new File(Environment.getExternalStorageDirectory().getPath());
+
+            //File mediaStorageDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
+            Log.d(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
+            Log.d(TAG, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath() );
             File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), getApplicationContext().getResources().getString(R.string.app_name));
 
             //2. Create our subdirectory
@@ -230,7 +255,8 @@ public class RecordVideo extends Activity {
             Date now = new Date();
             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(now);
 
-            String path = mediaStorageDir.getPath() + File.separator;
+            String path = mediaStorageDir.getAbsolutePath() + File.separator;
+            Log.d(TAG, mediaStorageDir.getAbsolutePath());
 
             fileName = ((AlienAlbum) getApplicationContext()).strUserName + timestamp + ".mp4";
             filePath = path + fileName;
@@ -241,7 +267,12 @@ public class RecordVideo extends Activity {
 
             Log.d(TAG, "File: " + Uri.fromFile(mediaFile));
             //5. Return the file's URI
-            return FileProvider.getUriForFile(RecordVideo.this, BuildConfig.APPLICATION_ID + ".provider", mediaFile);
+
+            if(Build.VERSION.SDK_INT> Build.VERSION_CODES.M) {
+                return FileProvider.getUriForFile(RecordVideo.this, BuildConfig.APPLICATION_ID + ".provider", mediaFile);
+            } else {
+                return Uri.fromFile(mediaFile);
+            }
         } else {
             return null;
         }
@@ -285,7 +316,7 @@ public class RecordVideo extends Activity {
         }else{
             try{
                 FileInputStream fileInputStream = new FileInputStream(selectedFile);
-                URL url = new URL(getString(R.string.server_dir) + "upload_video.php");
+                URL url = new URL(getString(R.string.server_dir) + "upload_video_jrb.php");
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setDoInput(true);//Allow Inputs
                 connection.setDoOutput(true);//Allow Outputs
@@ -378,6 +409,8 @@ public class RecordVideo extends Activity {
     private class UploadVideoTask extends AsyncTask<Uri, Integer, Long> {
 
         protected Long doInBackground(Uri... videoUri) {
+            uploading = true;
+            showProgress(uploading);
             int count = videoUri.length;
             long totalSize = 0;
             Log.i(TAG,"Selected File Path:" + filePath);
@@ -406,7 +439,8 @@ public class RecordVideo extends Activity {
         }
 
         protected void onPostExecute(Long result) {
-            Toast.makeText(RecordVideo.this, "Uploaded", Toast.LENGTH_SHORT).show();
+            uploading = false;
+            showProgress(uploading);
         }
     }
 
@@ -431,11 +465,10 @@ public class RecordVideo extends Activity {
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
-                String link = getString(R.string.server_dir) + "video_details.php"
+                String link = getString(R.string.server_dir) + "video_details_jrb.php"
                         + "?file_name=" + Uri.encode(vid_file_name, "UTF-8")
                         + "&length=" + vid_length
-                        + "&userID=" + ((AlienAlbum) getApplicationContext()).intUserID
-                        + "&user_name=" + Uri.encode(((AlienAlbum) getApplicationContext()).strUserName, "UTF-8");
+                        + "&userID=" + ((AlienAlbum) getApplicationContext()).intUserID;
 
                 Log.d(TAG, link);
 
@@ -510,7 +543,7 @@ public class RecordVideo extends Activity {
             if (method.equals("POST")) {
                 // request method is POST
                 try {
-                    urlObj = new URL(getString(R.string.server_dir) + "upload_bitmap.php");
+                    urlObj = new URL(getString(R.string.server_dir) + "upload_bitmap_jrb.php");
                     conn = (HttpURLConnection) urlObj.openConnection();
                     conn.setDoOutput(true);
                     conn.setRequestMethod("POST");
@@ -559,6 +592,38 @@ public class RecordVideo extends Activity {
             // return JSON Object
             return jObj;
         }
+    }
+
+    private void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+            mUploadingStatus.setVisibility(View.VISIBLE);
+            mUploadingStatus.setText(show ? getString(R.string.prompt_wait) : getString(R.string.prompt_uploaded) );
+
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mUploadingStatus.setText(show ? getString(R.string.prompt_uploaded) : getString(R.string.prompt_wait) );
+        }
+    }
+
+    @Override
+    public void onBackPressed(){
+        Intent intent = new Intent(RecordVideo.this, DisplayVideos.class);
+        RecordVideo.this.startActivity(intent);
+
     }
 }
 

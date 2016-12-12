@@ -3,15 +3,22 @@
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
+    <string name="prompt_back">Back</string>
+    <string name="prompt_edit">Edit Video Details</string>
+    <string name="prompt_previous">Previous</string>
+    <string name="prompt_next">Next</string>
     <string name="prompt_username">User Name</string>
     <string name="prompt_password">Password (min 4 chars)</string>
-    <string name="prompt_record">Record Your Video</string>
+    <string name="prompt_uploaded">Video Uploaded!</string>
+    <string name="prompt_wait">Please wait while video uploads</string>
+    <string name="prompt_network">Network connection not available</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_register">Register</string>
     <string name="action_record">Record New Video</string>
     <string name="action_search">Search</string>
     <string name="action_display">See All Videos</string>
     <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_username">This username is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
@@ -19,16 +26,33 @@
     <string name="server_dir">http://i.cs.hku.hk/~rbarrett/AlienAlbum/</string>
     <string name="registered">Registration Successful. Please Login</string>
 
-    <!-- Strings related to search -->
-    <string name="title_activity_search">Search</string>
-    <string name="prompt_tag">Tag match</string>
-    <string name="favorite">Video falls under the favorite scope</string>
-    <string name="prompt_search_range">Either private or public</string>
-    <string name="private_setting">Video falls under the private scope</string>
-    <string name="public_setting">Video falls under the public scope</string>
-    <string name="category">Type of category</string>
-    <string name="date_range">Range of date of video is being searched</string>
-    <string name="length_range">Range of length of video is being searched</string>
+    <string name="title_activity_search">Search Fields:</string>
+    <string name="Filename">File Name</string>
+    <string name="Comment">Video Name</string>
+    <string name="Category">Category</string>
+    <string name="Favourite">Favourite</string>
+    <string name="Favourites">Favourites</string>
+    <string name="AllFavourite">Search All</string>
+    <string name="Privacy">Privacy Level</string>
+    <string name="Private">Private</string>
+    <string name="Public">Public</string>
+    <string name="Tags">Tags</string>
+    <string name="prompt_tag_edit">Separate your tags with \",\" or \";\"</string>
+    <string name="prompt_tag_search">Enter a tag to search for</string>
+    <string name="btnCancel">Cancel</string>
+    <string name="btnSave">Save Changes</string>
 
-
+    <string name="allCats">All Categories</string>
+    <string-array name="categories_array">
+        <item>None</item>
+        <item>Sports</item>
+        <item>Humour</item>
+        <item>Food</item>
+        <item>Parties</item>
+        <item>Education</item>
+        <item>Politics</item>
+        <item>Animals</item>
+        <item>Family</item>
+        <item>Misc</item>
+    </string-array>
 </resources>

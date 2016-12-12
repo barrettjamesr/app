@@ -6,6 +6,8 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:textViewStyle">@style/AlienTextViews</item>
+        <item name="android:buttonStyle">@style/AlienButtons</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -16,5 +18,31 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="AlienTextViews"> parent="android:Widget.TextView">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:padding">10dp</item>
+    </style>
+
+    <style name="AlienButtons"> parent="android:Widget.Button"
+        <item name="android:background">@drawable/alien_button</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_marginEnd">10dp</item>
+        <item name="android:layout_marginStart">10dp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:shadowColor">@color/shadow</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowRadius">5</item>
+    </style>
+
+    <style name="AlienSwitch"> parent="android:Widget.Switch"
+        <item name="android:thumb">@drawable/apptheme_switch_inner_holo_light</item>
+        <item name="android:track">@drawable/apptheme_switch_track_holo_light</item>
+    </style>
 
 </resources>

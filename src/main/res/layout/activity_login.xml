@@ -11,6 +11,14 @@
     tools:context="com.smartphoneappdev.wcd.alienalbum.LoginActivity">
 
     <!-- Login progress -->
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="120dp"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/alien_album"
+        />
+
     <ProgressBar
         android:id="@+id/login_progress"
         style="?android:attr/progressBarStyleLarge"
@@ -26,11 +34,14 @@
 
         <LinearLayout
             android:id="@+id/email_login_form"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <android.support.design.widget.TextInputLayout
+                android:id="@+id/email_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -65,19 +76,17 @@
 
             <Button
                 android:id="@+id/email_sign_in_button"
-                style="?android:textAppearanceSmall"
+                style="@style/AlienButtons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 android:text="@string/action_sign_in"
                 android:textStyle="bold" />
 
             <Button
                 android:id="@+id/goto_register_button"
-                style="?android:textAppearanceSmall"
+                style="@style/AlienButtons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 android:text="@string/action_register"
                 android:textStyle="bold" />
 

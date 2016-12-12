@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_play_video"
     android:layout_width="match_parent"
@@ -8,6 +7,79 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
     tools:context="com.smartphoneappdev.wcd.alienalbum.PlayVideo">
 
-</RelativeLayout>
+    <TextView
+        android:id="@+id/videoComment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:layout_height="0dp">
+
+        <WebView
+            android:id="@+id/webView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+             />
+        <ImageView
+            android:id="@+id/imageview_edit"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_gravity="top|right"
+            android:src="@drawable/edit_icon"
+            />
+
+        <!--ImageView
+            android:id="@+id/imageview_blank"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_gravity="top"
+            /-->
+    </FrameLayout>
+
+    <Button
+        android:id="@+id/goto_record_button"
+        style="@style/AlienButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/action_record"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/prev_button"
+            style="@style/AlienButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/prompt_previous"
+            android:textStyle="bold" />
+        <Button
+            android:id="@+id/back_button"
+            style="@style/AlienButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/prompt_back"
+            android:textStyle="bold" />
+        <Button
+            android:id="@+id/next_button"
+            style="@style/AlienButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/prompt_next"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>
